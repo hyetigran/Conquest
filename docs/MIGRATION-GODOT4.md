@@ -89,4 +89,4 @@ Slice loop per `references/slice-loop.md`:
 - **The implementer never commits to `main`.** Diff, findings advanced, and gate results are presented; the human reviews and merges (squash, Conventional Commits message).
 - One append-only entry per slice in `docs/DEV-LOG.md` (`assets/DEV-LOG-TEMPLATE.md` shape); when a slice resolves a catalog finding, that finding gets struck through in `docs/BUGS-MITIGATIONS.md` with a reference to the resolving slice.
 - Each arc gets its planning file `docs/arcs/ARC-NN-NAME.md` written just before that arc starts (not all ten upfront), and a `arc-NN-complete` tag plus a short dev-log retro when it finishes.
-- Side quests (new features beyond what's in this spec) go to a backlog, never into an in-flight slice — they wait until Arc 10 ships.
+- Side quests (new features beyond what's in this spec) go to [BACKLOG.md](./BACKLOG.md), never into an in-flight slice — they wait until Arc 10 ships.
