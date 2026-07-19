@@ -32,7 +32,13 @@ This is a cleaner outcome than the subdirectory plan: **the new Godot 4 project 
 
 ### Story 2 — Test infrastructure (GUT)
 
-- **Slice 01-03 — Install GUT.** Vendor the GUT (Godot Unit Test) addon into `addons/gut/` at the repo root. **Needs a decision from you:** I don't have unrestricted internet fetch confirmed in this environment — if `WebFetch`/`git clone` of `https://github.com/bitwes/Gut` works from here I'll do it directly; otherwise this slice needs you to either approve that network access or drop the addon in manually and I'll wire it up. **Gate:** Godot 4 editor's plugin list recognizes GUT (checkable headlessly by confirming `addons/gut/plugin.cfg` parses and the autoload it needs is registered). **Effort:** 0.5 day (assuming the addon fetch itself isn't the blocker).
+- **Slice 01-03 — Install GUT. ✅ Done.** Network fetch turned out to work fine in this environment: shallow-cloned `bitwes/Gut` at tag `v9.7.1` (the Godot-4-targeted line — GUT's `v7.x` tags are for Godot 3) into scratch space, copied only `addons/gut/` into the repo (MIT-licensed, compatible with this project's license), and enabled it via `project.godot`'s `[editor_plugins] enabled=PackedStringArray("res://addons/gut/plugin.cfg")`.
+
+  Getting the CLI runner (`addons/gut/gut_cmdln.gd`) to actually work required one extra step not in the original plan: GUT's classes aren't resolvable until Godot's asset/script import pass has run at least once, so `Godot --headless --path . --import` had to be run first (it errors clearly — `Some GUT class_names have not been imported` — telling you exactly what to do). That import pass turned out to double as a real verification of Slice 01-02's converted assets: all 219 `legacy/`-derived files re-imported cleanly under Godot 4 with no fatal errors, and it generated the expected new Godot 4 artifacts — one `.gd.uid` per script (Godot 4.3+'s UID-based script identity) and refreshed `.import` metadata for every asset. All committed as part of this slice, since they're a direct, mechanical consequence of the import pass this slice needed anyway.
+
+  **Confirmed `legacy/` stayed untouched** by this import pass despite `--path .` covering the whole repo tree — `legacy/`'s own `project.godot` acts as a nested-project boundary that Godot's scanner doesn't descend into. Useful confirmation that the freeze holds even under whole-tree operations, not just ones that explicitly avoid the directory.
+
+  **Gate:** stronger than originally planned — rather than just confirming `plugin.cfg` parses, ran GUT's actual CLI runner (`Godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`), which correctly reported version `9.7.1` and a clean "path does not exist" error for the not-yet-created `res://tests` directory (expected — that's Slice 01-04's job) rather than any class-loading or plugin error. **Effort:** 0.5 day (as estimated; the fetch was not the blocker after all).
 - **Slice 01-04 — First smoke test.** One trivial GUT test (e.g. asserting the root project's `ProjectSettings` has the expected `config/name`) run via `Godot --headless -s addons/gut/gut_cmdln.gd` with GUT's standard exit-code convention (0 = all pass). This is the test the rest of the migration's "merge gate" in [MIGRATION-GODOT4.md](../MIGRATION-GODOT4.md) depends on existing. **Gate:** the command above exits 0 locally. **Effort:** 0.5 day.
 
 ### Story 3 — Headless CI
@@ -49,4 +55,4 @@ None directly — Arc 01 is pure scaffolding. It does, however, stand up the tes
 
 ## Open questions before Slice 01-01
 
-1. GUT addon acquisition method for Slice 01-03 (network fetch here vs. manual drop-in) — the only unresolved item; the repo-structure question above is now settled.
+None remaining — network fetch worked for Slice 01-03 (GUT installed via `git clone`), and the repo-structure question was settled before Slice 01-01.

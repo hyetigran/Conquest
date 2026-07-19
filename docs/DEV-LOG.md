@@ -21,3 +21,12 @@
 - **Learned:** confirmed directly, not just predicted, that the converter preserves behavioral bugs while modernizing syntax — spot-checked `InActiveState.gd` post-conversion and found F-001's shadowed-loop-variable crash still present verbatim, alongside a correctly modernized `super.enter(country)` call. This is exactly the risk [MIGRATION-OPTIONS.md](../MIGRATION-OPTIONS.md) flagged for Route C: useful for the ~35 mechanical files, no substitute for the audit-guided review Arc 02+ still has to do on every file, especially the ones the catalog actually flagged.
 
 ---
+
+## 2026-07-19 — Slice 01-gut-03: Install GUT
+
+- **Changed:** Shallow-cloned GUT v9.7.1 (MIT-licensed, Godot-4-targeted) and vendored `addons/gut/` into the repo; enabled it in `project.godot`. Ran `Godot --headless --path . --import` (required before GUT's classes resolve) and committed the resulting `.gd.uid` files and refreshed asset `.import` metadata as a natural side effect.
+- **Findings resolved:** none.
+- **Gate:** smoke ✔ — `Godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit` runs cleanly, reports GUT `9.7.1`, and correctly errors only on the not-yet-created `tests/` directory (expected — Slice 01-04's job).
+- **Learned:** network fetch (`git clone` of a GitHub repo) works fine in this environment — the open question from the arc plan is resolved. GUT's CLI runner needs an import pass to have happened at least once (`--import`) before its classes are resolvable; that pass is also a free extra confirmation of Slice 01-02's converted assets (all 219 files re-imported cleanly under Godot 4). Confirmed `legacy/`'s own `project.godot` acts as a project boundary — Godot's whole-tree `--import` did not descend into or modify anything under `legacy/`, even though nothing explicitly told it to skip that directory.
+
+---
