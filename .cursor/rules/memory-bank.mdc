@@ -1,0 +1,45 @@
+---
+description: Memory Bank — read at task start; update after significant work
+alwaysApply: true
+---
+
+# Memory Bank
+
+Session memory resets between chats. Rely on `memory-bank/` — not chat history.
+
+## At the start of every task
+
+Read **all** core files before acting:
+
+1. `memory-bank/projectbrief.md`
+2. `memory-bank/productContext.md`
+3. `memory-bank/systemPatterns.md`
+4. `memory-bank/techContext.md`
+5. `memory-bank/activeContext.md`
+6. `memory-bank/progress.md`
+
+Hierarchy: brief → product/system/tech → active → progress.
+
+## When to update
+
+Update Memory Bank when:
+
+- Discovering new project patterns
+- After implementing significant changes
+- User says **update memory bank** (review every file; focus on `activeContext.md` + `progress.md`)
+- Context needs clarification
+
+Also update `.cursor/rules/` when you learn durable project-specific patterns.
+
+## What belongs where
+
+| File | Contents |
+|---|---|
+| `projectbrief.md` | Scope, goals, non-goals |
+| `productContext.md` | Why it exists, UX goals |
+| `systemPatterns.md` | Architecture, key decisions |
+| `techContext.md` | Stack, setup, constraints |
+| `activeContext.md` | Current focus, next steps |
+| `progress.md` | What works, what's left, blockers |
+
+Do not duplicate long audit docs — link to `docs/` instead.
