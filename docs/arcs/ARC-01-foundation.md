@@ -49,11 +49,19 @@ This is a cleaner outcome than the subdirectory plan: **the new Godot 4 project 
 
 ### Story 3 — Headless CI
 
-- **Slice 01-05 — GitHub Actions workflow.** `.github/workflows/godot-tests.yml`: pulls a pinned Godot 4.7.1 Linux headless binary, runs the same GUT command as Slice 01-04 against the repo root, fails the check on nonzero exit. This becomes the gate every subsequent slice in every arc must pass before being presented for human review, per the slice-loop protocol. **Gate:** a deliberately-broken test in a scratch commit makes the workflow fail red; reverting makes it pass green (verifies the gate actually gates, not just that it runs). **Effort:** 0.5–1 day (CI YAML + one iteration to fix inevitable path/version mismatches).
+- **Slice 01-05 — GitHub Actions workflow. ✅ Done.** `.github/workflows/godot-tests.yml`: downloads the pinned Godot 4.7.1 Linux editor binary (cached by version — a repeat run skips the ~40MB download), runs `--headless --import` (required first per Slice 01-03's finding), then the GUT CLI runner with no flags (per Slice 01-04's `.gutconfig.json`).
+
+  **Gate, verified for real, not assumed:** pushed a deliberately-broken scratch test to this slice's own open PR (#6) and watched the workflow run `failure` (confirmed via `gh run view --json conclusion`, not by eyeballing colored text); reverted it and watched the next run `success`. Three live runs total: pass → fail → pass. This is the same "verify both directions" discipline as Slice 01-04, now proven at the CI level too.
+
+  **Went further than the original plan:** a workflow existing isn't the same as it being enforced — added the `gut` check as a `required_status_checks` context on `main`'s branch protection (alongside the PR-required rule from `chore/enforce-pr-workflow`), with `strict: true` so a branch must also be up to date with `main` before merging. Without this step, a red run would have been informational only; a human could still click "merge" past it. Confirmed via `gh api .../branches/main/protection` that `contexts: ["gut"]` is now present.
+
+  **Effort:** 0.5–1 day (as estimated — the exact release asset filename was confirmed via the GitHub API rather than guessed, which avoided a wasted first CI run).
 
 ## Total
 
 5 slices, **1.5–2.5 days of estimated work** at the per-slice level above — sits within the arc's 1–2 week range once review turnaround and the GUT-fetch unknown (Slice 01-03) are accounted for.
+
+**Arc 01 status: all 5 slices done, pending final PR (#6) merge.** The retro is already recorded in `docs/DEV-LOG.md` (written alongside this last slice, since it's reflecting on slices already merged or in this same PR). Once #6 merges: tag `arc-01-complete` on `main` — that step alone waits for the merge commit to exist.
 
 ## Findings resolved by this arc
 
