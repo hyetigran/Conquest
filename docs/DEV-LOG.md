@@ -30,3 +30,12 @@
 - **Learned:** network fetch (`git clone` of a GitHub repo) works fine in this environment — the open question from the arc plan is resolved. GUT's CLI runner needs an import pass to have happened at least once (`--import`) before its classes are resolvable; that pass is also a free extra confirmation of Slice 01-02's converted assets (all 219 files re-imported cleanly under Godot 4). Confirmed `legacy/`'s own `project.godot` acts as a project boundary — Godot's whole-tree `--import` did not descend into or modify anything under `legacy/`, even though nothing explicitly told it to skip that directory.
 
 ---
+
+## 2026-07-19 — Slice 01-gut-04: First smoke test
+
+- **Changed:** Added `tests/unit/test_project_settings.gd` (two trivial `ProjectSettings` assertions) and a root-level `.gutconfig.json` so the CLI runner needs zero flags — `Godot --headless --path . -s addons/gut/gut_cmdln.gd` is now the whole command, which is what Slice 01-05's CI will invoke.
+- **Findings resolved:** none.
+- **Gate:** smoke ✔ — verified both directions this time: exit 0 with the real suite (2/2 passing), exit 1 with a deliberately-broken scratch assertion (never committed).
+- **Learned (two verification mistakes worth flagging for future slices, not GUT bugs):** (1) `-gdir` doesn't recurse by default — needs `-ginclude_subdirs` / `"include_subdirs": true`, or tests placed in subdirectories are silently skipped ("Nothing was run", no error). (2) Checking `$?` after piping Godot's output through `tail` captures `tail`'s exit code, not Godot's — this produced a false "exit 0" for what was actually a failing test run. Redoing the check by redirecting to a file and reading `$?` directly caught the mistake. Both are exactly the kind of thing that would make a CI gate silently useless rather than red — flagged in `docs/arcs/ARC-01-foundation.md` so Slice 01-05 doesn't repeat either one.
+
+---
