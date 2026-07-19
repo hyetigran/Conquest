@@ -83,10 +83,10 @@ Medium/low findings map at category level (each still gets an individual line it
 
 Slice loop per `references/slice-loop.md`:
 
-- Branch per slice: `slice/<arc>-<story>-<slice>-<short-name>` (e.g. `slice/03-country-state-01-fix-inactive-crash`).
+- Branch per slice, off `main`, every time: `slice/<arc>-<story>-<slice>-<short-name>` (e.g. `slice/03-country-state-01-fix-inactive-crash`). No slice/task/ticket is ever worked directly on `main`.
 - Each slice: implementation + GUT tests + doc updates together, ≤ ~500 lines of meaningful diff.
 - Full gate (unit + integration + headless smoke) before any slice is presented.
-- **The implementer never commits to `main`.** Diff, findings advanced, and gate results are presented; the human reviews and merges (squash, Conventional Commits message).
+- **The implementer never commits to `main` and never merges its own work.** Once the branch passes its gate, push it and open a pull request against `main` (`gh pr create`) — the PR description covers what changed, which findings/stories it advances, and the gate results (the same content the slice-loop's "present" step calls for, now as the PR body instead of only a terminal diff). The human reviews the PR (on GitHub or locally) and merges it (squash, Conventional Commits message) — that merge is the only way anything reaches `main`. Branch protection on `main` should ultimately enforce this (PR required, no direct pushes), not just convention.
 - One append-only entry per slice in `docs/DEV-LOG.md` (`assets/DEV-LOG-TEMPLATE.md` shape); when a slice resolves a catalog finding, that finding gets struck through in `docs/BUGS-MITIGATIONS.md` with a reference to the resolving slice.
 - Each arc gets its planning file `docs/arcs/ARC-NN-NAME.md` written just before that arc starts (not all ten upfront), and a `arc-NN-complete` tag plus a short dev-log retro when it finishes.
 - Side quests (new features beyond what's in this spec) go to [BACKLOG.md](./BACKLOG.md), never into an in-flight slice — they wait until Arc 10 ships.
