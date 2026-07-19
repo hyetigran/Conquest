@@ -1,0 +1,44 @@
+# Arc 01 — Foundation
+
+> From [MIGRATION-GODOT4.md](../MIGRATION-GODOT4.md)'s roadmap: Godot 4 project skeleton, 3→4 converter as a first pass, GUT test infra, headless CI. Depends on: — (first arc). Estimated 1–2 weeks. Demonstrable outcome: an empty-but-running Godot 4 project with green CI on a trivial test.
+
+## Environment check (done during planning, not a slice)
+
+Confirmed locally before writing this plan:
+- **Godot 4.7.1** (stable, official build) is installed at `/Applications/Godot.app`, CLI at `/Applications/Godot.app/Contents/MacOS/Godot`. This satisfies the target engine version in [MIGRATION-GODOT4.md](../MIGRATION-GODOT4.md)'s stack table.
+- Relevant CLI flags confirmed via `--help`: `--headless`, `--check-only` (with `-s/--script`), `--convert-3to4 [max_file_kb] [max_line_size]` (editor-only, converts a Godot 3.x project in place), `--export-release`/`--export-debug`. All of Arc 01's automation below is built on these, not on manual editor clicks — so it's genuinely scriptable/CI-able, not just planned-as-if.
+- Repo is GitHub-hosted (`github.com/hyetigran/Conquest`), on branch `main`, no tags yet — GitHub Actions is the natural CI target.
+
+## Repo-structure decision — resolved
+
+Superseding this arc's original plan (a nested `godot4/` subdirectory with an Arc 10 promotion step): the original Godot 3 project has already been relocated, unmodified, to `legacy/` (`legacy/Source/`, `legacy/Assets/`, `legacy/Images/`, `legacy/project.godot`, `legacy/icon.png`, `legacy/icon.png.import`, `legacy/default_env.tres`), preserving git history via `git mv`. `README.md`'s image links were updated to `legacy/Images/...` accordingly. `docs/RECON.md` and `docs/BUGS-MITIGATIONS.md` both carry a path note explaining that every file citation in the audit should be read with a `legacy/` prefix.
+
+This is a cleaner outcome than the subdirectory plan: **the new Godot 4 project builds directly at the repo root from Slice 01-01 onward — no nested folder, no Arc 10 promotion/cutover step needed.** `legacy/` itself is the freeze; a `git tag godot3-original` is still cheap extra insurance but is no longer the primary safety mechanism.
+
+## Stories & slices
+
+### Story 1 — Scaffold Godot 4 at the repo root
+
+- **Slice 01-01 — Tag and scaffold.** `git tag godot3-original` at the commit where `legacy/` was created (belt-and-suspenders alongside `legacy/` simply not being touched). Create a fresh root-level `project.godot` by hand (not converter output) with settings ported from the audited original: `config/name="Conquest"`, window size 1280×720 with stretch mode/aspect as today, the full input map (`left`/`right`/`up`/`down`/`previous`/`next`/`quit`/`move`/`reveal_country_names`), and empty `[autoload]` for now (real autoloads arrive in later arcs once `GamePlay`/`Server` are rebuilt). No `legacy/Source/` code copied yet. **Gate:** `Godot --headless --path . --quit` exits 0 with no errors. **Effort:** 0.5–1 day.
+- **Slice 01-02 — Converter first pass, committed raw, kept out of the way.** Copy `legacy/Source/`, `legacy/Assets/`, `legacy/Images/` into a scratch working location *outside the repo* (e.g. the session scratchpad, not committed under version control there), run `Godot --headless --convert-3to4` against that scratch copy once, and commit **only its output** into a new root-level `Source/`/`Assets/` — as a raw, unreviewed first draft, clearly distinct from `legacy/`'s frozen original. Per [MIGRATION-OPTIONS.md](../MIGRATION-OPTIONS.md)'s Route D refinement, this is a first-pass starting point for the ~35 mechanical files, not a finished state for anything — Arc 02+ treat every converted file as needing the same audit-guided review as a from-scratch port, not as already done. **Gate:** converter run completes without throwing; the root project still opens headless without a fatal engine-level error (individual script errors are expected and fine at this stage — they're literally what Arc 02+ exist to fix). **Effort:** 0.5 day (the tool is fast; the value here is just capturing its output faithfully without letting it contaminate `legacy/`).
+
+### Story 2 — Test infrastructure (GUT)
+
+- **Slice 01-03 — Install GUT.** Vendor the GUT (Godot Unit Test) addon into `addons/gut/` at the repo root. **Needs a decision from you:** I don't have unrestricted internet fetch confirmed in this environment — if `WebFetch`/`git clone` of `https://github.com/bitwes/Gut` works from here I'll do it directly; otherwise this slice needs you to either approve that network access or drop the addon in manually and I'll wire it up. **Gate:** Godot 4 editor's plugin list recognizes GUT (checkable headlessly by confirming `addons/gut/plugin.cfg` parses and the autoload it needs is registered). **Effort:** 0.5 day (assuming the addon fetch itself isn't the blocker).
+- **Slice 01-04 — First smoke test.** One trivial GUT test (e.g. asserting the root project's `ProjectSettings` has the expected `config/name`) run via `Godot --headless -s addons/gut/gut_cmdln.gd` with GUT's standard exit-code convention (0 = all pass). This is the test the rest of the migration's "merge gate" in [MIGRATION-GODOT4.md](../MIGRATION-GODOT4.md) depends on existing. **Gate:** the command above exits 0 locally. **Effort:** 0.5 day.
+
+### Story 3 — Headless CI
+
+- **Slice 01-05 — GitHub Actions workflow.** `.github/workflows/godot-tests.yml`: pulls a pinned Godot 4.7.1 Linux headless binary, runs the same GUT command as Slice 01-04 against the repo root, fails the check on nonzero exit. This becomes the gate every subsequent slice in every arc must pass before being presented for human review, per the slice-loop protocol. **Gate:** a deliberately-broken test in a scratch commit makes the workflow fail red; reverting makes it pass green (verifies the gate actually gates, not just that it runs). **Effort:** 0.5–1 day (CI YAML + one iteration to fix inevitable path/version mismatches).
+
+## Total
+
+5 slices, **1.5–2.5 days of estimated work** at the per-slice level above — sits within the arc's 1–2 week range once review turnaround and the GUT-fetch unknown (Slice 01-03) are accounted for.
+
+## Findings resolved by this arc
+
+None directly — Arc 01 is pure scaffolding. It does, however, stand up the test infrastructure that [MIGRATION-GODOT4.md](../MIGRATION-GODOT4.md)'s findings map requires every subsequent arc to use (F-048's "no tests/CI" is the one finding this arc addresses, by existing at all), and Arc 01's mere completion — being on Godot 4 — is what starts resolving F-049 (the engine-EOL forcing function).
+
+## Open questions before Slice 01-01
+
+1. GUT addon acquisition method for Slice 01-03 (network fetch here vs. manual drop-in) — the only unresolved item; the repo-structure question above is now settled.
