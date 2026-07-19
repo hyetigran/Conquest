@@ -10,10 +10,10 @@ To play: install and run [Godot 3](https://godotengine.org/download/archive/3.0-
 # Online Multiplayer
 There is a public multiplayer server running at `conquestgame.online`.
 
-![Conquest](Images/SomePlaced.PNG)
-![Conquest](Images/MainMenu.png)
-![Conquest](Images/Lobby.png)
-![Conquest](Images/AllPlaced.PNG)
+![Conquest](legacy/Images/SomePlaced.PNG)
+![Conquest](legacy/Images/MainMenu.png)
+![Conquest](legacy/Images/Lobby.png)
+![Conquest](legacy/Images/AllPlaced.PNG)
 
 # Links
 - [Server code and documentation](https://github.com/argosopentech/Conquest-server)
