@@ -1,0 +1,47 @@
+name: Godot Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  gut:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Godot binary
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          curl -fL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          chmod +x "Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+
+      - name: Verify Godot version
+        run: godot --version
+
+      # GUT's classes aren't resolvable until Godot's script/asset import
+      # scan has run at least once (see docs/DEV-LOG.md, Slice 01-gut-03) --
+      # CI starts from a clean checkout every time, so this always runs.
+      - name: Import project
+        run: godot --headless --path . --import
+
+      # .gutconfig.json supplies dirs/include_subdirs/prefix/gexit, so no
+      # CLI flags are needed here -- see docs/DEV-LOG.md, Slice 01-gut-04.
+      - name: Run GUT tests
+        run: godot --headless --path . -s addons/gut/gut_cmdln.gd
